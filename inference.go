@@ -1,11 +1,16 @@
+/*
+Sniperkit-Bot
+- Status: analyzed
+*/
+
 package codetect
 
 import (
 	"log"
 	"os"
 
+	"github.com/snk.fork.vmarkovtsev-codeneuron.v1/assets"
 	tf "github.com/tensorflow/tensorflow/tensorflow/go"
-	"gopkg.in/vmarkovtsev/CodeNeuron.v1/assets"
 )
 
 // CodeBoundary represents a start or an end of a detected code block.
@@ -21,11 +26,11 @@ type CodeBoundary struct {
 var instance = loadModel()
 
 type model struct {
-	graph *tf.Graph
-	input1 tf.Output
-	input2 tf.Output
-	output tf.Output
-	batchSize int
+	graph          *tf.Graph
+	input1         tf.Output
+	input2         tf.Output
+	output         tf.Output
+	batchSize      int
 	sequenceLength int
 }
 
@@ -49,12 +54,12 @@ func loadModel() *model {
 	}
 	batchSize := int(inputShape[0])
 	sequenceLength := int(inputShape[1])
-	return &model {
-		graph: graph,
-		input1: input1,
-		input2: input2,
-		output: output,
-		batchSize: batchSize,
+	return &model{
+		graph:          graph,
+		input1:         input1,
+		input2:         input2,
+		output:         output,
+		batchSize:      batchSize,
 		sequenceLength: sequenceLength,
 	}
 }
@@ -63,32 +68,32 @@ func bakeText(text []rune) ([]*tf.Tensor, []*tf.Tensor, error) {
 	batchSize, sequenceLength := instance.batchSize, instance.sequenceLength
 	realSize := len(text) - sequenceLength
 	inputSize := realSize
-	if inputSize % batchSize != 0 {
-		inputSize = (inputSize / batchSize + 1) * batchSize
+	if inputSize%batchSize != 0 {
+		inputSize = (inputSize/batchSize + 1) * batchSize
 	}
-	batches1 := make([][][]uint8, inputSize / batchSize)
-	batches2 := make([][][]uint8, inputSize / batchSize)
+	batches1 := make([][][]uint8, inputSize/batchSize)
+	batches2 := make([][][]uint8, inputSize/batchSize)
 	for i := range batches1 {
 		batches1[i] = make([][]uint8, batchSize)
 		batches2[i] = make([][]uint8, batchSize)
 	}
 	for i := realSize; i < inputSize; i++ {
 		arr := make([]uint8, sequenceLength)
-		batches1[i / batchSize][i % batchSize] = arr
-		batches2[i / batchSize][i % batchSize] = arr
+		batches1[i/batchSize][i%batchSize] = arr
+		batches2[i/batchSize][i%batchSize] = arr
 	}
 	pos := 0
 	for x := range text {
-		if x < sequenceLength / 2 {
+		if x < sequenceLength/2 {
 			continue
 		}
-		if x >= len(text) - sequenceLength / 2 {
+		if x >= len(text)-sequenceLength/2 {
 			break
 		}
 		arr1 := make([]uint8, sequenceLength)
-		batches1[pos / batchSize][pos % batchSize] = arr1
+		batches1[pos/batchSize][pos%batchSize] = arr1
 		arr2 := make([]uint8, sequenceLength)
-		batches2[pos / batchSize][pos % batchSize] = arr2
+		batches2[pos/batchSize][pos%batchSize] = arr2
 		for i := 0; i < sequenceLength; i++ {
 			bi := x - sequenceLength + i + 1
 			if bi >= 0 {
@@ -150,7 +155,7 @@ func Run(text string, session *tf.Session) ([]CodeBoundary, error) {
 		}
 		probs := result[0].Value().([][]float32)
 		for _, prob := range probs {
-			offsetPos := pos + instance.sequenceLength / 2
+			offsetPos := pos + instance.sequenceLength/2
 			maxi := 2
 			maxval := prob[2]
 			if prob[0] > maxval {
@@ -164,16 +169,16 @@ func Run(text string, session *tf.Session) ([]CodeBoundary, error) {
 			if maxi == 0 {
 				boundaries = append(boundaries, CodeBoundary{
 					PositionInRunes: offsetPos,
-					Start: true,
+					Start:           true,
 				})
 			} else if maxi == 1 {
 				boundaries = append(boundaries, CodeBoundary{
 					PositionInRunes: offsetPos,
-					Start: false,
+					Start:           false,
 				})
 			}
 			pos++
-			if pos >= len(text) - instance.sequenceLength {
+			if pos >= len(text)-instance.sequenceLength {
 				break
 			}
 		}

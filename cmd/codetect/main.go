@@ -1,3 +1,8 @@
+/*
+Sniperkit-Bot
+- Status: analyzed
+*/
+
 package main
 
 import (
@@ -6,7 +11,7 @@ import (
 	"log"
 	"os"
 
-	"gopkg.in/vmarkovtsev/CodeNeuron.v1"
+	"github.com/snk.fork.vmarkovtsev-codeneuron.v1"
 )
 
 func main() {

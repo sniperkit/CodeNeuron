@@ -1,3 +1,8 @@
+/*
+Sniperkit-Bot
+- Status: analyzed
+*/
+
 package codetect
 
 var CHARS = map[rune]uint8{
